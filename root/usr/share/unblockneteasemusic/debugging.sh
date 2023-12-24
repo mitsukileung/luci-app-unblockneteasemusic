@@ -17,7 +17,8 @@ echo -e "\n"
 echo -e "uclient-fetch info:"
 opkg info uclient-fetch
 opkg info libustream-*
-uclient-fetch -O- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha' || echo -e "Failed to connect to GitHub with uclient-fetch."
+opkg info wget-ssl
+wget -O- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha' || echo -e "Failed to connect to GitHub with uclient-fetch."
 echo -e "\n"
 
 echo -e "Node.js info:"
@@ -72,19 +73,15 @@ echo -e "\n"
 [ -n "$is_stopped" ] || {
 	echo -e "Firewall info:"
 	if [ -e "$(command -v fw4)" ]; then
-		[ -e "/etc/nftables.d/90-$NAME-rules.nft" ] || echo -e 'netease_cloud_music nft rule file not found.'
+		[ -e "/var/run/$NAME/fw4.nft" ] || echo -e 'netease_cloud_music nft rule file not found.'
 		echo -e ""
 		nft list set inet fw4 "acl_neteasemusic_http" 2>&1
 		echo -e ""
 		nft list set inet fw4 "acl_neteasemusic_https" 2>&1
 		echo -e ""
-		nft list set inet fw4 "local_addr" 2>&1
-		echo -e ""
 		nft list set inet fw4 "neteasemusic" 2>&1
 		echo -e ""
-		nft list chain inet fw4 "input_wan" | grep "unblockneteasemusic-http-" 2>"/dev/null" || echo -e 'Http Port pub access rule not found.'
-		echo -e ""
-		nft list chain inet fw4 "input_wan" | grep "unblockneteasemusic-https-" 2>"/dev/null" || echo -e 'Https Port pub access rule not found.'
+		nft list set inet fw4 "neteasemusic6" 2>&1
 		echo -e ""
 		nft list chain inet fw4 "netease_cloud_music" 2>&1
 		echo -e ""
@@ -111,4 +108,4 @@ echo -e "\n"
 	echo -e ""
 }
 
-cat "/tmp/$NAME.log" 2>"/dev/null" || echo -e "Log is not avaiable."
+cat "/var/run/$NAME/run.log" 2>"/dev/null" || echo -e "Log is not avaiable."
